@@ -23,6 +23,7 @@
  */
 package revxrsal.zapper.classloader;
 
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URL;
@@ -37,6 +38,8 @@ public abstract class URLClassLoaderWrapper {
      * Adds the given URL to it
      */
     public abstract void addURL(@NotNull URL var1);
+
+    public abstract void flush();
 
     /**
      * Returns a {@link URLClassLoaderWrapper} for the given class loader

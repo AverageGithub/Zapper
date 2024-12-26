@@ -5,8 +5,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
 import java.util.function.Function;
 
 public final class PaperLibraryRemapper {
@@ -35,7 +33,8 @@ public final class PaperLibraryRemapper {
                 };
             }
 //            remapperFunction1 = (Function<List<Path>, List<Path>    >) LIBRARY_LOADER_CLASS.getDeclaredField("REMAPPER").get(null);
-        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException | NoSuchMethodException exception) {
+        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException |
+                 NoSuchMethodException exception) {
             remapperFunction1 = Function.identity();
             exception.printStackTrace();
         }

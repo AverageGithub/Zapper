@@ -93,6 +93,7 @@ public final class DependencyManager implements DependencyScope {
                 else
                     loaderWrapper.addURL(PaperLibraryRemapper.tryRemap(file).toURI().toURL());
             }
+            loaderWrapper.flush();
         } catch (DependencyDownloadException e) {
             if (e.getCause() instanceof UnknownHostException) {
                 Bukkit.getLogger().info("[Zapper] It appears you do not have an internet connection. Extract the zip in https://bit.ly/3cd3wGe at /Zapper/libraries.");

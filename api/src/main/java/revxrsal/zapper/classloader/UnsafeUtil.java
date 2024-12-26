@@ -66,4 +66,15 @@ final class UnsafeUtil {
             throw new RuntimeException(t);
         }
     }
+
+    public static <T> void setField(Object instance, String name, Class<?> from, T value) {
+        try {
+            Unsafe unsafe = Unsafe.get();
+            Field field = from.getDeclaredField(name);
+            long offset = unsafe.objectFieldOffset(field);
+            unsafe.putObject(instance, offset, value);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
 }
