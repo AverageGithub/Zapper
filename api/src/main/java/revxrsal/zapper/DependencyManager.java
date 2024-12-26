@@ -29,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import revxrsal.zapper.classloader.URLClassLoaderWrapper;
 import revxrsal.zapper.relocation.Relocation;
 import revxrsal.zapper.relocation.Relocator;
+import revxrsal.zapper.remapper.PaperLibraryRemapper;
 import revxrsal.zapper.repository.Repository;
 
 import java.io.File;
@@ -64,7 +65,7 @@ public final class DependencyManager implements DependencyScope {
                 File relocated = new File(directory, String.format("%s.%s-%s-relocated.jar", dep.getGroupId(),
                         dep.getArtifactId(), dep.getVersion()));
                 if (hasRelocations() && relocated.exists()) {
-                    loaderWrapper.addURL(relocated.toURI().toURL());
+                    loaderWrapper.addURL(PaperLibraryRemapper.tryRemap(relocated).toURI().toURL());
                     continue;
                 }
                 if (!file.exists()) {
@@ -86,10 +87,11 @@ public final class DependencyManager implements DependencyScope {
                     Relocator.relocate(file, relocated, relocations);
                     file.delete(); // no longer need the original dependency
                 }
+
                 if (hasRelocations())
-                    loaderWrapper.addURL(relocated.toURI().toURL());
+                    loaderWrapper.addURL(PaperLibraryRemapper.tryRemap(relocated).toURI().toURL());
                 else
-                    loaderWrapper.addURL(file.toURI().toURL());
+                    loaderWrapper.addURL(PaperLibraryRemapper.tryRemap(file).toURI().toURL());
             }
         } catch (DependencyDownloadException e) {
             if (e.getCause() instanceof UnknownHostException) {
