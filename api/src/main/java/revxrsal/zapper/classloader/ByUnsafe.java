@@ -28,6 +28,7 @@ import org.jetbrains.annotations.NotNull;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -40,22 +41,22 @@ import static revxrsal.zapper.classloader.UnsafeUtil.isJava8;
  */
 final class ByUnsafe extends URLClassLoaderWrapper {
     private static final Class<? extends URLClassLoader> PL_CL_LOADER;
-    private static final Class<?> LIBRARY_LOADER;
+    private static BiFunction<URL[], ClassLoader, URLClassLoader> LOADER_FACTORY;
+    private static Class<?> LIBRARY_LOADER;
     private final List<URL> urls;
     private final URLClassLoader loader;
     private final Collection<URL> unopenedURLs;
     private final List<URL> pathURLs;
-    private ClassLoader libraryLoader = null;
 
     public ByUnsafe(@NotNull URLClassLoader loader) {
         this.loader = loader;
         List<URL> urls0 = null;
         if (PL_CL_LOADER.isAssignableFrom(loader.getClass())) {
             try {
-                libraryLoader = UnsafeUtil.getField(loader, "libraryLoader", PL_CL_LOADER);
+                ClassLoader libraryLoader = UnsafeUtil.getFieldNullable(loader, "libraryLoader", PL_CL_LOADER);
                 urls0 = new ArrayList<>();
             } catch (Exception exception) {
-                libraryLoader = null;
+
             }
         }
         urls = urls0;
@@ -66,7 +67,7 @@ final class ByUnsafe extends URLClassLoaderWrapper {
     }
 
     public void addURL(@NotNull URL url) {
-        if (urls != null && LIBRARY_LOADER != null) {
+        if (urls != null && LIBRARY_LOADER != null && LOADER_FACTORY != null) {
             urls.add(url);
             return;
         }
@@ -78,9 +79,24 @@ final class ByUnsafe extends URLClassLoaderWrapper {
     @Override
     public void flush() {
         if (urls != null && !urls.isEmpty()) {
-            BiFunction<URL[], ClassLoader, URLClassLoader> LOADER_FACTORY = UnsafeUtil.getField(null, "LIBRARY_LOADER_FACTORY", LIBRARY_LOADER);
+            List<URL> urlsCopy = new ArrayList<>(urls);
+            ClassLoader prevLoader = UnsafeUtil.getFieldNullable(loader, "libraryLoader", PL_CL_LOADER);
+            if (prevLoader instanceof URLClassLoader) {
+                URL[] prevUrls = ((URLClassLoader) prevLoader).getURLs();
+                for (URL url : prevUrls) {
+                    if (urlsCopy.contains(url)) {
+                        continue;
+                    }
+                    urlsCopy.add(url);
+                }
+            }
+            URLClassLoader classLoader;
+            if (LOADER_FACTORY == null) {
+                classLoader = new URLClassLoader(urlsCopy.toArray(new URL[0]), LIBRARY_LOADER.getClassLoader());
+            } else {
+                classLoader = LOADER_FACTORY.apply(urlsCopy.toArray(new URL[0]), LIBRARY_LOADER.getClassLoader());
+            }
 
-            URLClassLoader classLoader = LOADER_FACTORY.apply(urls.toArray(new URL[0]), LIBRARY_LOADER.getClassLoader());
             UnsafeUtil.setField(loader, "libraryLoader", PL_CL_LOADER, classLoader);
         }
     }
@@ -89,7 +105,16 @@ final class ByUnsafe extends URLClassLoaderWrapper {
         try {
             PL_CL_LOADER = Class.forName("org.bukkit.plugin.java.PluginClassLoader")
                     .asSubclass(URLClassLoader.class);
-            LIBRARY_LOADER = Class.forName("org.bukkit.plugin.java.LibraryLoader");
+            try {
+                LIBRARY_LOADER = Class.forName("org.bukkit.plugin.java.LibraryLoader");
+            } catch (Exception e) {
+                LIBRARY_LOADER = null;
+            }
+            try {
+                LOADER_FACTORY = UnsafeUtil.getFieldReflection(null, "LIBRARY_LOADER_FACTORY", LIBRARY_LOADER);
+            } catch (Exception e) {
+                LOADER_FACTORY = null;
+            }
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }

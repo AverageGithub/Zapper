@@ -32,7 +32,7 @@ import java.util.Objects;
 /**
  * Represents a Maven repository with a URL
  */
-final class MavenRepository implements Repository {
+public final class MavenRepository implements Repository {
 
     private static final MavenRepository MAVEN_CENTRAL = new MavenRepository("https://repo1.maven.org/maven2/");
     private static final MavenRepository JITPACK = new MavenRepository("https://jitpack.io/");

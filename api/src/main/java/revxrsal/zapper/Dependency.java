@@ -47,6 +47,7 @@ public final class Dependency {
     private final String groupId;
     private final String artifactId;
     private final String version;
+    private final String classifier;
     private final String mavenPath;
 
     public Dependency(@NotNull String groupId, @NotNull String artifactId, @NotNull String version) {
@@ -57,6 +58,7 @@ public final class Dependency {
         this.groupId = groupId;
         this.artifactId = artifactId;
         this.version = version;
+        this.classifier = classifier;
         mavenPath = String.format(MAVEN_PATH,
                 this.groupId.replace('.', '/'),
                 this.artifactId,
@@ -106,6 +108,10 @@ public final class Dependency {
         }
     }
 
+    public String getClassifier() {
+        return this.classifier;
+    }
+
     public String getGroupId() {
         return this.groupId;
     }
@@ -120,5 +126,15 @@ public final class Dependency {
 
     public String getMavenPath() {
         return this.mavenPath;
+    }
+
+    @Override
+    public String toString() {
+        return "Dependency{" +
+                "groupId='" + groupId + '\'' +
+                ", artifactId='" + artifactId + '\'' +
+                ", version='" + version + '\'' +
+                ", classifier='" + classifier + '\'' +
+                '}';
     }
 }

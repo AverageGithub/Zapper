@@ -27,7 +27,6 @@ public final class PaperLibraryRemapper {
                     try {
                         return (Path) REWRITE_METHOD.invoke(REMAPPER_INSTANCE, path);
                     } catch (IllegalAccessException | InvocationTargetException e) {
-                        e.printStackTrace();
                         throw new RuntimeException(e);
                     }
                 };
@@ -36,7 +35,6 @@ public final class PaperLibraryRemapper {
         } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException |
                  NoSuchMethodException exception) {
             remapperFunction1 = Function.identity();
-            exception.printStackTrace();
         }
 
         remapperFunction = remapperFunction1;

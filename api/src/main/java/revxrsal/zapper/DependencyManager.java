@@ -51,15 +51,22 @@ public final class DependencyManager implements DependencyScope {
     private final List<Dependency> dependencies = new ArrayList<>();
     private final Set<Repository> repositories = new LinkedHashSet<>();
     private final List<Relocation> relocations = new ArrayList<>();
+    private final TransitiveDependencyHelper helper;
 
     public DependencyManager(@NotNull File directory, @NotNull URLClassLoaderWrapper loaderWrapper) {
         this.directory = directory;
         this.loaderWrapper = loaderWrapper;
         this.repositories.add(Repository.mavenCentral());
+        this.helper = new TransitiveDependencyHelper(this, this.directory.toPath());
     }
 
     public void load() {
         try {
+            List<Dependency> copy = new ArrayList<>(this.dependencies);
+            for (Dependency dependency : copy) {
+                this.dependencies.addAll(this.helper.findTransitiveLibraries(dependency));
+            }
+
             for (Dependency dep : dependencies) {
                 File file = new File(directory, String.format("%s.%s-%s.jar", dep.getGroupId(), dep.getArtifactId(), dep.getVersion()));
                 File relocated = new File(directory, String.format("%s.%s-%s-relocated.jar", dep.getGroupId(),
@@ -131,9 +138,12 @@ public final class DependencyManager implements DependencyScope {
     public void repository(@NotNull Repository repository) {
         repositories.add(repository);
     }
-    
+
+    public Set<Repository> repositories() {
+        return this.repositories;
+    }
+
     public boolean hasRelocations() {
         return !relocations.isEmpty();
     }
-    
 }

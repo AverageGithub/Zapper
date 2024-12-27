@@ -25,8 +25,10 @@ package revxrsal.zapper.classloader;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
 
 /**
  * A {@link URLClassLoader} that is detatched from the entire plugin classloader.
@@ -52,5 +54,18 @@ public final class IsolatedClassLoader extends URLClassLoader {
          * to be the platform class loader.
          */
         super(urls, ClassLoader.getSystemClassLoader().getParent());
+    }
+
+    @Override
+    public void addURL(URL url) {
+        super.addURL(url);
+    }
+
+    public void addPath(Path path) {
+        try {
+            this.addURL(path.toUri().toURL());
+        } catch (MalformedURLException exception) {
+            throw new RuntimeException(exception);
+        }
     }
 }

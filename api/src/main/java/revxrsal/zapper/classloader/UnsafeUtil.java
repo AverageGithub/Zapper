@@ -56,12 +56,16 @@ final class UnsafeUtil {
     }
 
     public static <T> T getField(Object instance, String name, Class<?> from) {
+        return Objects.requireNonNull(getFieldNullable(instance, name, from), "getField(" + name + ") from " + from);
+    }
+
+    public static <T> T getFieldNullable(Object instance, String name, Class<?> from) {
         try {
             Unsafe unsafe = Unsafe.get();
             Field field = from.getDeclaredField(name);
             long offset = unsafe.objectFieldOffset(field);
             T value = (T) unsafe.getObject(instance, offset);
-            return Objects.requireNonNull(value, "getField(" + name + ") from " + from);
+            return value;
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
@@ -73,6 +77,16 @@ final class UnsafeUtil {
             Field field = from.getDeclaredField(name);
             long offset = unsafe.objectFieldOffset(field);
             unsafe.putObject(instance, offset, value);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    public static <T> T getFieldReflection(Object instance, String name, Class<?> from) {
+        try {
+            Field field = from.getDeclaredField(name);
+            field.setAccessible(true);
+            return (T) field.get(instance);
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
